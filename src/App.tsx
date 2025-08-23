@@ -385,9 +385,9 @@ function App() {
         <Tooltip title="Recargar datos">
           <Button startIcon={<RefreshIcon />} onClick={loadData}>Recargar</Button>
         </Tooltip>
-        <Tooltip title="Descarga un JSON de ejemplo para colocarlo en /public/nom035-data.json">
+        {/* <Tooltip title="Descarga un JSON de ejemplo para colocarlo en /public/nom035-data.json">
           <Button startIcon={<DownloadIcon />} variant="contained" onClick={downloadSampleJson}>Descargar JSON de ejemplo</Button>
-        </Tooltip>
+        </Tooltip> */}
       </Stack>
 
       <Card sx={{ mb: 3 }}>
@@ -446,8 +446,8 @@ function App() {
                   <YAxis />
                   <RTooltip />
                   <Legend />
-                  <Bar dataKey="Horas" />
-                  <Bar dataKey="Capacidad" />
+                  <Bar dataKey="Horas" fill="#8884d8"/>
+                  <Bar dataKey="Capacidad" fill="#82ca9d" />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
@@ -459,7 +459,7 @@ function App() {
             <CardContent sx={{ height: 280 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie data={tasksByPattern} dataKey="value" nameKey="name" label outerRadius={110} />
+                  <Pie data={tasksByPattern} dataKey="value" nameKey="name" label outerRadius={110} fill="#8884d8" />
                   <RTooltip />
                   <Legend />
                 </PieChart>
@@ -479,7 +479,7 @@ function App() {
                   <YAxis />
                   <RTooltip />
                   <Legend />
-                  <Bar dataKey="value" name="# Tareas" />
+                  <Bar dataKey="value" name="# Tareas" fill="#82ca9d" />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
@@ -496,7 +496,7 @@ function App() {
                   <YAxis domain={[0, 100]} />
                   <RTooltip />
                   <Legend />
-                  <Line type="monotone" dataKey="Riesgo" />
+                  <Line type="monotone" dataKey="Riesgo" stroke="#8884d8" />
                 </LineChart>
               </ResponsiveContainer>
             </CardContent>
