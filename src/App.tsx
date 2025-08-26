@@ -33,6 +33,7 @@ import {
   BarChart,
   Bar,
   CartesianGrid,
+  Cell,
   XAxis,
   YAxis,
   Tooltip as RTooltip,
@@ -43,6 +44,7 @@ import {
   LineChart,
   Line,
 } from "recharts";
+import { PieLabelProps } from "recharts/types/polar/Pie";
 
 /**
  * NOM-035 Dashboard – Instrucciones de datos
@@ -108,17 +110,17 @@ interface EmployeeRow {
 const sampleData = {
   employees: [
     { id: "e1", name: "Ana López", role: "Evaluadora", orgUnit: "Académica", weeklyCapacity: 40, secureReports: 1 },
-    { id: "e2", name: "Luis Pérez", role: "Coordinador", orgUnit: "Académica", weeklyCapacity: 38, secureReports: 0 },
-    { id: "e3", name: "María Díaz", role: "Analista", orgUnit: "TI", weeklyCapacity: 40, secureReports: 2 },
-    { id: "e4", name: "Diego Flores", role: "Analista", orgUnit: "TI", weeklyCapacity: 36, secureReports: 0 },
+    { id: "e2", name: "Luis Pérez", role: "Coordinador", orgUnit: "Académica", weeklyCapacity: 30, secureReports: 0 },
+    { id: "e3", name: "María Díaz", role: "Analista", orgUnit: "TI", weeklyCapacity: 32, secureReports: 2 },
+    { id: "e4", name: "Diego Flores", role: "Analista", orgUnit: "TI", weeklyCapacity: 20, secureReports: 0 },
     { id: "e5", name: "Sofía Ramírez", role: "Psicóloga Organizacional", orgUnit: "RH", weeklyCapacity: 35, secureReports: 3 },
   ],
   tasks: [
     { id: "t1", title: "Evaluar plan de mejora - Nanotecnología", pattern: "direct", assigneeId: "e1", orgUnit: "Académica", effortHours: 8, createdAt: "2025-08-01", deadline: "2025-08-22", status: "in_progress", priority: "high" },
-    { id: "t2", title: "Revisión de cargas Académicas", pattern: "direct", assigneeId: "e2", orgUnit: "Académica", effortHours: 10, createdAt: "2025-08-02", deadline: "2025-08-28", status: "in_progress", priority: "medium" },
+    { id: "t2", title: "Revisión de cargas Académicas", pattern: "direct", assigneeId: "e2", orgUnit: "Académica", effortHours: 40, createdAt: "2025-08-02", deadline: "2025-08-28", status: "in_progress", priority: "medium" },
     { id: "t3", title: "Evaluación de clima laboral Q3", pattern: "deferred", assigneeId: null, orgUnit: "RH", effortHours: 6, createdAt: "2025-08-05", deadline: "2025-09-15", status: "backlog", priority: "high" },
     { id: "t4", title: "Soporte de plataforma de workflow", pattern: "offer", assigneeId: null, orgUnit: "TI", effortHours: 6, createdAt: "2025-08-05", deadline: "2025-08-25", status: "offered", priority: "low", offersAccepted: 0 },
-    { id: "t5", title: "Automatizar reporte NOM-035", pattern: "direct", assigneeId: "e3", orgUnit: "TI", effortHours: 12, createdAt: "2025-08-06", deadline: "2025-08-21", status: "in_progress", priority: "high" },
+    { id: "t5", title: "Automatizar reporte NOM-035", pattern: "direct", assigneeId: "e3", orgUnit: "TI", effortHours: 38, createdAt: "2025-08-06", deadline: "2025-08-21", status: "in_progress", priority: "high" },
     { id: "t6", title: "Backlog auditoría de accesos", pattern: "deferred", assigneeId: null, orgUnit: "TI", effortHours: 5, createdAt: "2025-08-10", deadline: "2025-09-01", status: "backlog", priority: "medium" },
     { id: "t7", title: "Oferta: mejora de documentación", pattern: "offer", assigneeId: null, orgUnit: "TI", effortHours: 4, createdAt: "2025-08-11", deadline: "2025-08-29", status: "offered", priority: "low", offersAccepted: 1 },
     { id: "t8", title: "Entrevistas de atención temprana", pattern: "direct", assigneeId: "e5", orgUnit: "RH", effortHours: 14, createdAt: "2025-08-03", deadline: "2025-08-26", status: "in_progress", priority: "high" },
@@ -164,15 +166,15 @@ function riskScoreForEmployee(emp: Employee, tasksForEmp: Task[]): number {
 function riskChip(score: number) {
   let color: "error" | "warning" | "success" | "primary" | "secondary" | "info" | undefined = undefined;
   let label = "Bajo";
-  if (score >= 70) {
-    color = "error";
-    label = "Alto";
-  } else if (score >= 40) {
+  if (score <= 40){
+    color = "success";
+    label = "Bajo";
+  } else if (score > 40 && score <= 70) {
     color = "warning";
     label = "Medio";
   } else {
-    color = "success";
-    label = "Bajo";
+    color = "error";
+    label = "Alto";
   }
   return <Chip size="small" color={color} label={`${label} (${score})`} icon={<WarningAmberIcon />} />;
 }
@@ -375,6 +377,22 @@ function App() {
     URL.revokeObjectURL(url);
   };
 
+  const RADIAN = Math.PI / 180;
+  const COLORS_ASIGN_PATTER = ['#db1b0b', '#e6cd28', '#63de5d'];
+  const COLORS_TASKS = ['#0088FE', '#FFBB28', '#FF8042'];
+
+  const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: PieLabelProps) => {
+    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+    const x = cx + radius * Math.cos(-(midAngle ?? 0) * RADIAN);
+    const y = cy + radius * Math.sin(-(midAngle ?? 0) * RADIAN);
+
+    return (
+      <text x={x} y={y} fill="white" textAnchor={x > cx ? 'start' : 'end'} dominantBaseline="central">
+        {`${((percent ?? 1) * 100).toFixed(0)}%`}
+      </text>
+    );
+  };
+
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
       <Stack direction="row" alignItems="center" spacing={1} mb={2}>
@@ -385,9 +403,6 @@ function App() {
         <Tooltip title="Recargar datos">
           <Button startIcon={<RefreshIcon />} onClick={loadData}>Recargar</Button>
         </Tooltip>
-        {/* <Tooltip title="Descarga un JSON de ejemplo para colocarlo en /public/nom035-data.json">
-          <Button startIcon={<DownloadIcon />} variant="contained" onClick={downloadSampleJson}>Descargar JSON de ejemplo</Button>
-        </Tooltip> */}
       </Stack>
 
       <Card sx={{ mb: 3 }}>
@@ -437,6 +452,42 @@ function App() {
       <Grid container spacing={2} sx={{ mt: 1 }}>
         <Grid item xs={12} md={6}>
           <Card sx={{ height: 360 }}>
+            <CardHeader title="Distribución por patrón de asignación" subheader="Directa vs Diferida vs Oferta" />
+            <CardContent sx={{ height: 280 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={tasksByPattern} dataKey="value" nameKey="name" label={renderCustomizedLabel} labelLine={false} outerRadius={100}>
+                    {tasksByPattern.map((entry, index) => (
+                      <Cell key={`cell-02-${entry.name}`} fill={COLORS_ASIGN_PATTER[index % COLORS_ASIGN_PATTER.length]} />
+                    ))}
+                  </Pie>
+                  <RTooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} md={6}>
+          <Card sx={{ height: 360 }}>
+            <CardHeader title="Tareas por área" subheader="Detección de posibles cuellos de botella por unidad" />
+            <CardContent sx={{ height: 280 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={tasksByOrgUnit} dataKey="value" nameKey="name" outerRadius={100} labelLine={false}  label={renderCustomizedLabel}>
+                    {tasksByOrgUnit.map((entry, index) => (
+                      <Cell key={`cell-01-${entry.name}`} fill={COLORS_TASKS[index % COLORS_TASKS.length]} />
+                    ))}
+                  </Pie>
+                  <RTooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} md={6}>
+          <Card sx={{ height: 360 }}>
             <CardHeader title="Carga de trabajo por empleado (horas)" subheader="Comparación vs capacidad semanal" />
             <CardContent sx={{ height: 280 }}>
               <ResponsiveContainer width="100%" height="100%">
@@ -446,40 +497,8 @@ function App() {
                   <YAxis />
                   <RTooltip />
                   <Legend />
-                  <Bar dataKey="Horas" fill="#8884d8"/>
-                  <Bar dataKey="Capacidad" fill="#82ca9d" />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} md={6}>
-          <Card sx={{ height: 360 }}>
-            <CardHeader title="Distribución por patrón de asignación" subheader="Directa vs Diferida vs Oferta" />
-            <CardContent sx={{ height: 280 }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie data={tasksByPattern} dataKey="value" nameKey="name" label outerRadius={110} fill="#8884d8" />
-                  <RTooltip />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} md={6}>
-          <Card sx={{ height: 360 }}>
-            <CardHeader title="Tareas por área" subheader="Detección de posibles cuellos de botella por unidad" />
-            <CardContent sx={{ height: 280 }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={tasksByOrgUnit}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <RTooltip />
-                  <Legend />
-                  <Bar dataKey="value" name="# Tareas" fill="#82ca9d" />
+                  <Bar dataKey="Horas" fill="#0fbcde"/>
+                  <Bar dataKey="Capacidad" fill="#2ca643" />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
@@ -490,14 +509,14 @@ function App() {
             <CardHeader title="Riesgo psicosocial promedio por área" subheader="Índice 0–100 (más alto = mayor atención)" />
             <CardContent sx={{ height: 280 }}>
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={riskByOrgUnit}>
+                <BarChart data={riskByOrgUnit}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis domain={[0, 100]} />
+                  <XAxis dataKey="name" interval={0} angle={-15} textAnchor="end" height={60} />
+                  <YAxis />
                   <RTooltip />
                   <Legend />
-                  <Line type="monotone" dataKey="Riesgo" stroke="#8884d8" />
-                </LineChart>
+                  <Bar dataKey="Riesgo" fill="#fca417"/>
+                </BarChart>
               </ResponsiveContainer>
             </CardContent>
           </Card>
